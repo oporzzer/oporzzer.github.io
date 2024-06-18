@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
+    <script>
+        $(function () {
+            $('head').load('head.html');
+            $('#header').load('header.html');
+        });
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page2</title>
+</head>
+<body onload="checkLoginAndLoadData()">
+    <div id="header"></div>
+
+    <div class="col-6 mt-5 mx-auto bg-light p-3 border">
+        <button id="add_new_data" type="button" class="btn btn-success mb-3" onclick="click_add_new_data()">Add New Data</button>
+        <table id="tb1" class="table table-bordered border border-dark border-3 table-hover table-striped">
+            <thead>
+              <tr>
+                <th scope="col">SID</th>
+                <th scope="col">Sname</th>
+                <th scope="col">Phone</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+            </tbody>
+          </table>
+    </div>
+
+    <script>
+        let tb1 = document.getElementById('tb1').getElementsByTagName('tbody')[0];
+        let sid = [];
+        let sname = [];
+        let phone = [];
+        let isEditing = false;
+        let editingIndex = -1; // Add a new variable to track the index being edited
+
+        function checkLoginAndLoadData() {
+            if (sessionStorage.getItem('user') == null) {
+                alert('กรุณาล็อกอินให้เรียบร้อย');
+                location.href = 'login.html';
+            } else {
+                load_data();
+            }
+        }
+
+        function click_add_new_data() {
+            if (!isEditing) {
+                let row = tb1.insertRow();
+                row.insertCell().innerHTML = '<input type="text" class="form-control" id="input_sid" placeholder="Input Student ID">';
+                row.insertCell().innerHTML = '<input type="text" class="form-control" id="input_sname" placeholder="Input Full Name">';
+                row.insertCell().innerHTML = '<input type="text" class="form-control" id="input_phone" placeholder="Input Phone Number">';
+                row.insertCell().innerHTML = '<button type="button" class="btn btn-success mb-3 me-2" onclick="click_save_data()">Save</button>' +
+                                             '<button type="button" class="btn btn-danger mb-3" onclick="click_cancel()">Cancel</button>';
+                document.getElementById('add_new_data').disabled = true;
+                isEditing = true;
+            } else {
+                alert('Please finish editing before adding new data.');
+            }
+        }
+
+        function click_save_data() {
+            sid.push(document.getElementById('input_sid').value);
+            sname.push(document.getElementById('input_sname').value);
+            phone.push(document.getElementById('input_phone').value);
+
+            localStorage.setItem('sid', JSON.stringify(sid));
+            localStorage.setItem('sname', JSON.stringify(sname));
+            localStorage.setItem('phone', JSON.stringify(phone));
+
+            load_data();
+            document.getElementById('add_new_data').disabled = false;
+            isEditing = false;
+            editingIndex = -1; // Reset editing index
+        }
+
+        function click_cancel() {
+            if (editingIndex >= 0) {
+                load_data();
+            }
+            document.getElementById('add_new_data').disabled = false;
+            isEditing = false;
+            editingIndex = -1; // Reset editing index
+        }
+
+        function load_data() {
+            sid = JSON.parse(localStorage.getItem('sid')) || [];
+            sname = JSON.parse(localStorage.getItem('sname')) || [];
+            phone = JSON.parse(localStorage.getItem('phone')) || [];
+
+            tb1.innerHTML = '';
+            for (let i = 0; i < sid.length; i++) {
+                let row = tb1.insertRow();
+                row.insertCell().innerHTML = sid[i];
+                row.insertCell().innerHTML = sname[i];
+                row.insertCell().innerHTML = phone[i];
+                row.insertCell().innerHTML = '<button type="button" class="btn btn-info" onclick="edit_data(' + i + ')">Edit</button>' +
+                                             '<button type="button" class="btn btn-danger" onclick="delete_data(' + i + ')">Delete</button>';
+            }
+        }
+
+        function edit_data(index) {
+            if (!isEditing) {
+                let row = tb1.rows[index];
+                row.cells[0].innerHTML = '<input type="text" class="form-control" id="edit_sid" value="' + sid[index] + '">';
+                row.cells[1].innerHTML = '<input type="text" class="form-control" id="edit_sname" value="' + sname[index] + '">';
+                row.cells[2].innerHTML = '<input type="text" class="form-control" id="edit_phone" value="' + phone[index] + '">';
+                row.cells[3].innerHTML = '<button type="button" class="btn btn-success mb-3 me-2" onclick="save_edit_data(' + index + ')">Save</button>' +
+                                         '<button type="button" class="btn btn-danger mb-3" onclick="cancel_edit()">Cancel</button>';
+                document.getElementById('add_new_data').disabled = true;
+                isEditing = true;
+                editingIndex = index; // Set the editing index
+            } else {
+                alert('Please finish adding or editing data before making changes.');
+            }
+        }
+
+        function save_edit_data(index) {
+            sid[index] = document.getElementById('edit_sid').value;
+            sname[index] = document.getElementById('edit_sname').value;
+            phone[index] = document.getElementById('edit_phone').value;
+
+            localStorage.setItem('sid', JSON.stringify(sid));
+            localStorage.setItem('sname', JSON.stringify(sname));
+            localStorage.setItem('phone', JSON.stringify(phone));
+
+            load_data();
+            document.getElementById('add_new_data').disabled = false;
+            isEditing = false;
+            editingIndex = -1; // Reset editing index
+        }
+
+        function cancel_edit() {
+            load_data();
+            document.getElementById('add_new_data').disabled = false;
+            isEditing = false;
+            editingIndex = -1; // Reset editing index
+        }
+
+        function delete_data(index) {
+            sid.splice(index, 1);
+            sname.splice(index, 1);
+            phone.splice(index, 1);
+
+            localStorage.setItem('sid', JSON.stringify(sid));
+            localStorage.setItem('sname', JSON.stringify(sname));
+            localStorage.setItem('phone', JSON.stringify(phone));
+
+            load_data();
+        }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+</body>
+</html>
